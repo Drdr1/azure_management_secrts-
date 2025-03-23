@@ -25,7 +25,6 @@ variable "azure_client_secret" {
 variable "resource_group_name" {
   description = "Name of the resource group"
   type        = string
-  default     = "secret-management-rg-${random_id.suffix.hex}"  # Append a random suffix
 }
 
 variable "location" {
