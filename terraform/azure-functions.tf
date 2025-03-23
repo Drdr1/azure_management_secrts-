@@ -1,6 +1,6 @@
 
 resource "azurerm_storage_account" "storage_account" {
-  name                     = "secretfunctionstorage${random_id.suffix.hex}"  # Append a random suffix
+  name                     = "secretstore${random_id.suffix.hex}"  # Shorter name
   resource_group_name      = azurerm_resource_group.rg.name
   location                 = azurerm_resource_group.rg.location
   account_tier             = "Standard"
