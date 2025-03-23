@@ -6,35 +6,36 @@ resource "azurerm_storage_account" "storage_account" {
   account_replication_type = "LRS"
 }
 
-resource "azurerm_function_app" "function_app" {
+resource "azurerm_service_plan" "app_service_plan" {
+  name                = "secret-function-app-service-plan"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  os_type             = "Linux"  # Ensure this is set to "Linux"
+  sku_name            = "Y1"     # Consumption plan
+}
+
+resource "azurerm_linux_function_app" "function_app" {
   name                       = "secret-expiry-function"
   location                   = azurerm_resource_group.rg.location
   resource_group_name        = azurerm_resource_group.rg.name
-  app_service_plan_id        = azurerm_app_service_plan.app_service_plan.id
+  service_plan_id            = azurerm_service_plan.app_service_plan.id
   storage_account_name       = azurerm_storage_account.storage_account.name
   storage_account_access_key = azurerm_storage_account.storage_account.primary_access_key
-  os_type                    = "linux"
-  version                    = "~3"
+
+  site_config {
+    application_stack {
+      dotnet_version = "6.0"  # Specify the .NET version
+    }
+  }
 
   app_settings = {
     "FUNCTIONS_WORKER_RUNTIME" = "dotnet"
   }
 }
 
-resource "azurerm_app_service_plan" "app_service_plan" {
-  name                = "secret-function-app-service-plan"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  kind                = "FunctionApp"
-  sku {
-    tier = "Dynamic"
-    size = "Y1"
-  }
-}
-
 resource "azurerm_function_app_function" "timer_function" {
   name            = "CheckExpiringSecrets"
-  function_app_id = azurerm_function_app.function_app.id
+  function_app_id = azurerm_linux_function_app.function_app.id
   config_json = jsonencode({
     bindings = [
       {
