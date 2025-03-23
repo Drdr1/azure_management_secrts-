@@ -59,4 +59,6 @@ jobs:
           TF_VAR_azure_client_secret: ${{ secrets.ARM_CLIENT_SECRET }}
           TF_VAR_azure_subscription_id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           TF_VAR_azure_tenant_id: ${{ secrets.ARM_TENANT_ID }}
+          TF_VAR_resource_group_name: "secret-management-rg-12345"
+
         run: terraform apply -auto-approve
