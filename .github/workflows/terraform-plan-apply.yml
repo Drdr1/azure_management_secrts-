@@ -23,12 +23,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      # Set up Terraform with caching
+      # Set up Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.0
-          terraform_wrapper: true
 
       # Set environment variables for Azure authentication
       - name: Set Azure credentials
@@ -56,5 +55,8 @@ jobs:
       - name: Terraform Apply
         if: github.event_name == 'push'
         env:
-          TF_LOG: DEBUG
+          TF_VAR_azure_client_id: ${{ secrets.ARM_CLIENT_ID }}
+          TF_VAR_azure_client_secret: ${{ secrets.ARM_CLIENT_SECRET }}
+          TF_VAR_azure_subscription_id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          TF_VAR_azure_tenant_id: ${{ secrets.ARM_TENANT_ID }}
         run: terraform apply -auto-approve
