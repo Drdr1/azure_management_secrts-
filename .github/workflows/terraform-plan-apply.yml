@@ -23,11 +23,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      # Set up Terraform
+      # Set up Terraform with caching
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.0
+          terraform_wrapper: true
 
       # Set environment variables for Azure authentication
       - name: Set Azure credentials
@@ -54,4 +55,6 @@ jobs:
       # Run Terraform Apply on Push to Main
       - name: Terraform Apply
         if: github.event_name == 'push'
+        env:
+          TF_LOG: DEBUG
         run: terraform apply -auto-approve
