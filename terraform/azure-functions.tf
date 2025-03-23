@@ -1,5 +1,9 @@
+resource "random_id" "suffix" {
+  byte_length = 4  # Generates a 4-byte (8-character) random suffix
+}
+
 resource "azurerm_storage_account" "storage_account" {
-  name                     = "secretfunctionstorage"
+  name                     = "secretfunctionstorage${random_id.suffix.hex}"  # Append a random suffix
   resource_group_name      = azurerm_resource_group.rg.name
   location                 = azurerm_resource_group.rg.location
   account_tier             = "Standard"
