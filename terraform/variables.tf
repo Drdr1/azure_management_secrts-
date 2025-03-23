@@ -34,6 +34,3 @@ variable "location" {
   default     = "eastus"
 }
 
-resource "random_id" "suffix" {
-  byte_length = 4  # Generates a 4-byte (8-character) random suffix
-}
