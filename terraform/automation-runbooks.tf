@@ -11,6 +11,8 @@ resource "azurerm_automation_runbook" "runbook" {
   resource_group_name     = azurerm_resource_group.rg.name
   automation_account_name = azurerm_automation_account.automation_account.name
   runbook_type            = "PowerShell"
+  log_progress            = true  # Required argument
+  log_verbose             = true  # Required argument
   content = <<EOF
 # Get secrets from Azure Key Vault
 $Secrets = Get-AzKeyVaultSecret -VaultName "YourKeyVaultName"
@@ -29,10 +31,10 @@ resource "azurerm_automation_schedule" "daily_schedule" {
   automation_account_name = azurerm_automation_account.automation_account.name
   frequency               = "Day"
   interval                = 1
-  start_time              = "2025-4-01T08:00:00Z"
+  start_time              = "2025-04-01T08:00:00Z"  # Corrected date format
 }
 
-resource "azurerm_automation_job_schedule" "runbook_schedule" {
+resource "azurerm_automation_job_schedule_v2" "runbook_schedule" {
   resource_group_name     = azurerm_resource_group.rg.name
   automation_account_name = azurerm_automation_account.automation_account.name
   runbook_name            = azurerm_automation_runbook.runbook.name
