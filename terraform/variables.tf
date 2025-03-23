@@ -25,11 +25,15 @@ variable "azure_client_secret" {
 variable "resource_group_name" {
   description = "Name of the resource group"
   type        = string
-  default     = "secret-management-rg"
+  default     = "secret-management-rg-${random_id.suffix.hex}"  # Append a random suffix
 }
 
 variable "location" {
   description = "Azure region for resources"
   type        = string
-  default     = "East US"
+  default     = "eastus"
+}
+
+resource "random_id" "suffix" {
+  byte_length = 4  # Generates a 4-byte (8-character) random suffix
 }
