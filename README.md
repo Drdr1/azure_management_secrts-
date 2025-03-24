@@ -153,21 +153,6 @@ terraform destroy -auto-approve
 
 - Defines the GitHub Actions workflow for automating Terraform deployments.
 
-### Contact
-
----
-
-### **How to Use This README**
-
-1. Copy the content above into a new `README.md` file in your repository.
-2. Replace placeholders like `Ahmed Darder` and `ahmeddarder157@gmail.com` with your actual details.
-3. Commit and push the changes to your repository.
-
----
-
-This `README.md` provides a **comprehensive guide** for anyone to set up and run the Terraform configuration, even if they are new to Terraform or Azure. It includes **step-by-step instructions**, **troubleshooting tips**, and **contact information**. Let me know if you need further adjustments! 
-
-
 
 
 
