@@ -153,6 +153,43 @@ terraform destroy -auto-approve
 
 - Defines the GitHub Actions workflow for automating Terraform deployments.
 
+## How to Test the Solution :
+
+### **Step 1: Create a Secret in Azure Key Vault**
+
+- Go to the Azure Portal.
+
+- Navigate to your Azure Key Vault.
+
+- Create a new secret with an expiration date set to a few days in the future.
+
+### **Step 2: Trigger the Automation Runbook or Azure Function**
+
+ Automation Runbook:
+
+- Go to the Azure Portal.
+
+- Navigate to the Automation Account.
+
+- Find the Runbook named check-expiring-secrets.
+
+-Manually start the Runbook and verify that it sends an email notification.
+
+- Azure Function:
+
+- Go to the Azure Portal.
+
+- Navigate to the Function App.
+
+- Find the Function named CheckExpiringSecrets.
+
+- Manually trigger the Function and verify that it sends a Slack or email notification.
+
+### **Step 3: Verify Notifications**
+
+Check your email or Slack for notifications about the expiring secret.
+
+
 
 
 
