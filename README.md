@@ -112,8 +112,6 @@ terraform apply -auto-approve
 
 1- Check your email or Slack for notifications about expiring secrets.
 
-2- If notifications are not working, verify the configurations for Logic Apps, Automation Runbooks, and Azure Functions.
-
 
 ### **Step 9: Clean Up**
 
