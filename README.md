@@ -1,196 +1,232 @@
-# Azure Management Secrets with Terraform
+# Azure Key Vault Secret Management & Expiration Notification System
 
-This repository contains Terraform configurations to automate the management of **Azure Key Vault secrets**, **App Registrations (Service Principals)**, and **Azure DevOps service connections**. It also includes workflows to notify users via **email** or **Slack** when secrets are nearing expiration.
+This solution automates the management of Azure Key Vault secrets, App Registrations (Service Principals), and Azure DevOps service connections, with automatic email notifications when secrets are nearing expiration.
 
----
+## Solution Overview
 
-## **What Was Completed**
+![Architecture Diagram](https://i.imgur.com/JGXnLSw.png)
 
-1. **Terraform Configurations**:
-   - Created resources for:
-     - **Azure Key Vault** to manage secrets.
-     - **App Registrations (Service Principals)** to manage credentials.
-     - **Azure DevOps service connections** to manage service endpoints.
-   - Set up **Logic Apps**, **Automation Runbooks**, and **Azure Functions** to notify users about expiring secrets.
+The solution includes:
 
-2. **GitHub Actions Workflow**:
-   - Automated the deployment of Terraform configurations using GitHub Actions.
-   - Integrated with **Jira** to track tasks and issues.
+1. **Azure Key Vault** for secure storage of secrets
+2. **Azure AD App Registration** and Service Principal creation
+3. **Azure DevOps Service Connection** setup using the Service Principal
+4. **Event Grid** subscription for monitoring secret expiration events
+5. **Azure Function** for processing events and sending notifications
+6. **SendGrid** integration for email delivery
 
-3. **Notifications**:
-   - Configured **email** and **Slack** notifications for expiring secrets.
+## Prerequisites
 
----
+- Azure subscription with contributor access
+- Azure CLI installed and authenticated
+- Terraform v1.0 or later
+- SendGrid account with verified sender
+- Azure DevOps organization and project
 
-## **How to Run**
+## Setup Instructions
 
-Follow these **step-by-step instructions** to set up and run the Terraform configuration:
-
----
-
-### **Step 1: Prerequisites**
-
-Before you begin, ensure you have the following:
-
-1. **Azure Account**:
-   - You need an Azure account with the necessary permissions to create resources.
-
-2. **Service Principal**:
-   - Create a Service Principal in Azure and grant it the **Contributor** role for your subscription.
-   - Save the following details:
-     - `ARM_CLIENT_ID`
-     - `ARM_CLIENT_SECRET`
-     - `ARM_SUBSCRIPTION_ID`
-     - `ARM_TENANT_ID`
-
-3. **GitHub Repository**:
-   - Fork or clone this repository to your GitHub account.
-
-4. **GitHub Secrets**:
-   - Go to your repository > **Settings > Secrets and variables > Actions**.
-   - Add the following secrets:
-     - `ARM_CLIENT_ID`
-     - `ARM_CLIENT_SECRET`
-     - `ARM_SUBSCRIPTION_ID`
-     - `ARM_TENANT_ID`
-
----
-
-### **Step 2: Clone the Repository**
-
-Clone the repository to your local machine:
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/Drdr1/azure_management_secrts-.git
-cd azure_management_secrts-
+git clone https://github.com/yourusername/azure-secret-management.git
+cd azure-secret-management
 ```
-### **Step 3: Initialize Terraform**
+
+### 2. Configure Variables
+
+Create a `terraform.tfvars` file with your specific values:
+
+```hcl
+# Resource naming and location
+resource_group_name    = "keyvault-automation-rg"
+location               = "East US"
+key_vault_name_prefix  = "kv-auto"
+app_registration_name  = "terraform-service-principal"
+
+# Secret expiration settings
+secret_expiry_days            = 365
+notification_days_before_expiry = 30
+
+# Azure DevOps settings
+azure_devops_org_url       = "https://dev.azure.com/your-organization"
+azure_devops_pat           = "your-personal-access-token" # Keep this secure!
+azure_devops_project_name  = "YourProject"
+service_connection_name    = "Terraform-Azure-Connection"
+
+# Notification settings
+email_recipients = [
+  "your-email@example.com"
+]
+slack_webhook_url        = "" # Optional
+use_email_notifications  = true
+use_slack_notifications  = false
+
+# SendGrid Email Configuration
+sendgrid_api_key = "your-sendgrid-api-key" # Keep this secure!
+email_from       = "your-verified-sender@example.com"
+```
+
+### 3. Deploy Infrastructure
+
+Initialize and apply the Terraform configuration:
 
 ```bash
 terraform init
+terraform apply
 ```
 
-### **Step 4: Review the Terraform Plan**
+### 4. Deploy Function App Code
+
+After Terraform has created the infrastructure, deploy the Function App code:
 
 ```bash
-terraform plan
+chmod +x deploy_function.sh
+./deploy_function.sh
 ```
 
-### **Step 5: Apply the Terraform Configuration**
+### 5. Update Event Grid Subscription
+
+Follow the instructions output by the deployment script to update the Event Grid subscription to use your Function App.
+
+### 6. Test the Solution
+
+Create a test secret with a short expiration time:
 
 ```bash
-terraform apply -auto-approve
+# Get Key Vault name from Terraform output
+KEY_VAULT_NAME=$(terraform output -raw key_vault_name)
+
+# Create a secret that expires in 2 minutes
+az keyvault secret set --vault-name $KEY_VAULT_NAME \
+  --name "test-expiring-secret" \
+  --value "test-value" \
+  --expires $(date -u -d "2 minutes" '+%Y-%m-%dT%H:%M:%SZ')
 ```
 
-### **Step 6: Verify the Resources**
+## How It Works
 
-1- Go to the Azure Portal.
+1. **Secret Creation**: Secrets are stored in Azure Key Vault with expiration dates.
 
-2- Navigate to the Resource Group specified in the configuration (secret-management-rg by default).
+2. **Automatic Monitoring**: Azure Key Vault monitors secrets for upcoming expiration.
 
-3- Verify that the following resources have been created:
+3. **Event Generation**: When a secret is nearing expiration, Key Vault generates a `SecretNearExpiry` event.
 
-. Azure Key Vault
+4. **Event Processing**: Event Grid captures the event and routes it to the Azure Function.
 
-. Logic Apps
+5. **Notification**: The Function processes the event and sends an email notification with details about the expiring secret.
 
-. Automation Runbooks
+## Security Best Practices
 
-. Azure Functions
+1. **Secure Storage of Credentials**:
+   - Never commit `terraform.tfvars` to source control
+   - Use Azure Key Vault or environment variables for sensitive values
+   - Add `terraform.tfvars` and `.terraform/` to `.gitignore`
 
+2. **Access Control**:
+   - Use the principle of least privilege for all service principals
+   - Regularly review and audit access to the Key Vault
 
-### **Step 7: Run the GitHub Actions Workflow**
+3. **Secret Rotation**:
+   - Implement a process for rotating secrets when notified
+   - Consider automating secret rotation where possible
 
-1- Push changes to the main branch of your repository.
+## Maintenance
 
-2- Go to the Actions tab in your GitHub repository.
+### Regular Tasks
 
-3- Verify that the workflow runs successfully and creates the resources in Azure.
+1. **Monitor Function App Logs**: Check for any errors or issues in the notification process.
 
+2. **Update Node.js Version**: Keep the Function App's Node.js version current with supported versions.
 
-### **Step 8: Monitor Notifications**
+3. **Verify SendGrid Configuration**: Ensure your SendGrid API key and sender email remain valid.
 
-1- Check your email or Slack for notifications about expiring secrets.
+4. **Review Secret Expiration Policies**: Adjust expiration periods based on your security requirements.
 
+### Troubleshooting
 
-### **Step 9: Clean Up**
+#### Email Notifications Not Received
 
-To delete all the resources created by Terraform, run:
+1. Check Function App logs for errors:
+   ```bash
+   az functionapp logs tail --name <function-app-name> --resource-group <resource-group-name>
+   ```
 
-```bash
-terraform destroy -auto-approve
-```
+2. Verify SendGrid sender verification:
+   - Log in to SendGrid
+   - Go to Settings > Sender Authentication
+   - Ensure your sender email is verified
 
----
+3. Test the Function directly:
+   ```bash
+   # Get Function URL
+   FUNCTION_URL="<your-function-url-with-code>"
+   
+   # Create test event
+   cat > event.json << EOF
+   [{
+     "id": "test-event-id",
+     "eventType": "Microsoft.KeyVault.SecretNearExpiry",
+     "subject": "/secrets/test-secret",
+     "data": {
+       "VaultName": "<your-key-vault-name>",
+       "ObjectType": "Secret",
+       "ObjectName": "test-secret",
+       "Version": "",
+       "NBF": null,
+       "EXP": $(date -d "2 minutes" +%s)
+     },
+     "eventTime": "$(date -u +%Y-%m-%dT%H:%M:%S.%NZ)"
+   }]
+   EOF
+   
+   # Test function
+   curl -X POST -H "Content-Type: application/json" -d @event.json $FUNCTION_URL
+   ```
 
-## Terraform Configuration Overview :
+#### Event Grid Subscription Issues
 
-### Key Files:
+1. Check Event Grid subscription status:
+   ```bash
+   az eventgrid event-subscription show \
+     --name sub-secret-near-expiry \
+     --source-resource-id /subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.EventGrid/systemTopics/<event-grid-topic-name>
+   ```
 
-1- main.tf:
+2. Recreate the subscription if needed:
+   ```bash
+   az eventgrid event-subscription create \
+     --name sub-secret-near-expiry \
+     --source-resource-id /subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.EventGrid/systemTopics/<event-grid-topic-name> \
+     --endpoint <function-url> \
+     --included-event-types Microsoft.KeyVault.SecretNearExpiry Microsoft.KeyVault.SecretExpired
+   ```
 
-- Defines the main Terraform configuration, including the Resource Group and provider settings.
+## Extending the Solution
 
-2- variables.tf:
+### Add Slack Notifications
 
-- Contains input variables for the configuration (e.g., resource_group_name, location).
+1. Create a Slack webhook URL in your Slack workspace
+2. Update `terraform.tfvars` to enable Slack notifications:
+   ```hcl
+   use_slack_notifications = true
+   slack_webhook_url = "https://hooks.slack.com/services/..."
+   ```
+3. Reapply the Terraform configuration
 
-3- logic-apps.tf:
+### Automate Secret Rotation
 
-- Configures Logic Apps for sending notifications.
+Consider extending this solution to automatically rotate secrets when they're nearing expiration:
 
-4- automation-runbooks.tf:
+1. Modify the Function App code to generate new secrets
+2. Update the relevant services with the new secret values
+3. Store the new secrets in Key Vault with updated expiration dates
 
-- Configures Automation Runbooks for checking expiring secrets.
+## License
 
-5- azure-functions.tf:
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-- Configures Azure Functions for triggering notifications.
+## Acknowledgments
 
-6- .github/workflows/terraform.yml:
-
-- Defines the GitHub Actions workflow for automating Terraform deployments.
-
-## How to Test the Solution :
-
-### **Step 1: Create a Secret in Azure Key Vault**
-
-- Go to the Azure Portal.
-
-- Navigate to your Azure Key Vault.
-
-- Create a new secret with an expiration date set to a few days in the future.
-
-### **Step 2: Trigger the Automation Runbook or Azure Function**
-
- Automation Runbook:
-
-- Go to the Azure Portal.
-
-- Navigate to the Automation Account.
-
-- Find the Runbook named check-expiring-secrets.
-
--Manually start the Runbook and verify that it sends an email notification.
-
-- Azure Function:
-
-- Go to the Azure Portal.
-
-- Navigate to the Function App.
-
-- Find the Function named CheckExpiringSecrets.
-
-- Manually trigger the Function and verify that it sends a Slack or email notification.
-
-### **Step 3: Verify Notifications**
-
-Check your email or Slack for notifications about the expiring secret.
-
-
-
-
-
-
-
-
+- HashiCorp for Terraform
+- Microsoft Azure for cloud services
+- SendGrid for email delivery services

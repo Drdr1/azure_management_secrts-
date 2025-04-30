@@ -1,0 +1,14 @@
+[{
+  "id": "test-event-id",
+  "eventType": "Microsoft.KeyVault.SecretNearExpiry",
+  "subject": "/secrets/test-expiring-secret",
+  "data": {
+    "VaultName": "kv-auto-75a7sx",
+    "ObjectType": "Secret",
+    "ObjectName": "test-expiring-secret",
+    "Version": "",
+    "NBF": null,
+    "EXP": 1745918103
+  },
+  "eventTime": "2025-04-29T09:13:03.779042769Z"
+}]
